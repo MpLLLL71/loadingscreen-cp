@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Loading Screen - HogwartsRP</title>
+    <style>
+        /* Configuration du fond en dégradé bleu */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            /* Le fameux dégradé bleu (ajuste les codes hex selon ton bleu précis) */
+            background: radial-gradient(circle, #1a2a6c 0%, #000000 100%); 
+            color: white;
+        }
+
+        /* Overlay pour donner du relief comme sur Aniq Load */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        /* Colonnes latérales */
+        .column {
+            width: 25%;
+            height: 80%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Style des boîtes semi-transparentes */
+        .box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Conteneur Central pour le Logo */
+        .center-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .logo {
+            max-width: 300px;
+            margin-bottom: 20px;
+            /* Petit effet de lueur pour le logo */
+            filter: drop-shadow(0 0 15px rgba(0, 150, 255, 0.5));
+        }
+
+        /* Barre de progression personnalisée */
+        .progress-wrapper {
+            width: 60%;
+            margin-top: 30px;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #progress-inner {
+            width: 0%;
+            height: 100%;
+            background: #0096ff; /* Ton bleu vif pour la progression */
+            transition: width 0.3s ease;
+        }
+
+        h3 { border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding-bottom: 10px; margin-top: 0; }
+        ul { padding-left: 20px; font-size: 0.9em; line-height: 1.6; }
+		
+		/* Zone des astuces en bas de l'écran */
+		.tips-container {
+			position: absolute;
+			bottom: 30px;
+			width: 100%;
+			text-align: center;
+			font-style: italic;
+			color: rgba(255, 255, 255, 0.7);
+			font-size: 1.1em;
+			text-shadow: 0 0 10px rgba(0, 150, 255, 0.5);
+			transition: opacity 0.5s ease-in-out;
+		}
+		.audio-control {
+			position: absolute;
+			bottom: 20px;
+			left: 20px;
+			background: rgba(0, 0, 0, 0.4);
+			padding: 8px 15px;
+			border-radius: 20px;
+			font-size: 0.8em;
+			cursor: pointer;
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			transition: background 0.3s;
+		}
+
+		.audio-control:hover {
+			background: rgba(0, 150, 255, 0.3);
+		}
+    </style>
+</head>
+<body>
+
+<div class="overlay">
+    <div class="column">
+        <div class="box">
+            <h3>👤 Sorcier</h3>
+            <p id="username">Chargement...</p>
+            <p id="steamid" style="font-size: 0.8em; opacity: 0.6;">STEAM_0:0:000000</p>
+        </div>
+        <div class="box">
+            <h3>📜 Décret d'Éducation</h3>
+            <ul>
+                <li>Sortilèges interdits en dehors des cours.</li>
+                <li>Respect strict de l'uniforme.</li>
+                <li>Accès interdit à la Forêt Interdite.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="center-content">
+        <img src="materials/images/logo.png" class="logo" alt="Logo HogwartsRP">
+		<!-- <audio id="loading-music" loop> -->
+			<!-- <source src="lien_de_ta_musique.mp3" type="audio/mpeg"> -->
+		<!-- </audio> -->
+		<div id="youtube-player" style="display:none;"></div>
+
+		<div class="audio-control" onclick="toggleMute()">
+			<span id="speaker-icon">🔊</span> Musique : <span id="music-status">ON</span>
+		</div>
+        <div class="progress-wrapper">
+            <p id="status" style="font-size: 0.9em; margin-bottom: 10px;">Récupération des grimoires...</p>
+            <div class="progress-bar-bg">
+                <div id="progress-inner"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="box">
+            <h3>📍 Localisation</h3>
+            <p>Map: <span id="mapname">Poudlard</span></p>
+        </div>
+        <div class="box">
+            <h3>⚡ Direction</h3>
+            <p style="font-size: 0.9em;">Directeur : TonNom</p>
+            <p style="font-size: 0.9em;">Préfets en ligne : 3</p>
+        </div>
+    </div>
+	
+	<div class="tips-container" id="tip-text">
+		Préparez vos baguettes, l'aventure commence...
+	</div>
+</div>
+
+<script type="text/javascript">
+    // Fonctions GMod pour rendre la page dynamique
+    function GameDetails( servername, serverurl, mapname, maxplayers, steamid, gamemode ) {
+        document.getElementById("mapname").innerHTML = mapname;
+        document.getElementById("steamid").innerHTML = steamid;
+    }
+
+    function SetStatusChanged( status ) {
+        document.getElementById("status").innerHTML = status;
+    }
+
+    function SetFilesNeeded( needed ) {
+        this.totalFiles = needed;
+    }
+
+    function SetFilesRemaining( remaining ) {
+        let progress = ((this.totalFiles - remaining) / this.totalFiles) * 100;
+        document.getElementById("progress-inner").style.width = progress + "%";
+    }
+	
+	const tips = [
+    "Le sortilège de lévitation se prononce Wingardium Leviosa, et non Leviosaaa.",
+    "La Forêt Interdite porte bien son nom : n'y allez pas seul.",
+    "Les points de maison sont précieux, ne faites pas honte à vos camarades.",
+    "N'oubliez pas de saluer les tableaux, certains sont très bavards.",
+    "Le concierge Rusard surveille les couloirs après le couvre-feu.",
+    "Besoin d'aide ? Les préfets sont là pour vous guider."
+];
+
+	function cycleTips() {
+		const tipElement = document.getElementById('tip-text');
+		let currentIndex = 0;
+
+		setInterval(() => {
+			tipElement.style.opacity = 0; // Effet de disparition
+        
+			setTimeout(() => {
+				currentIndex = (currentIndex + 1) % tips.length;
+				tipElement.innerHTML = tips[currentIndex];
+				tipElement.style.opacity = 1; // Effet d'apparition
+			}, 500);
+		}, 5000); // Change toutes les 5 secondes
+	}
+
+	// On lance le cycle au chargement
+	window.onload = cycleTips;
+	
+	// On charge l'API YouTube de manière asynchrone
+	var tag = document.createElement('script');
+	tag.src = "https://www.youtube.com/iframe_api";
+	var firstScriptTag = document.getElementsByTagName('script')[0];
+	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+	var player;
+	function onYouTubeIframeAPIReady() {
+		player = new YT.Player('youtube-player', {
+			height: '0',
+			width: '0',
+			videoId: 'slxPFAJN9UM', // L'ID de ta vidéo Hogwarts Legacy
+			playerVars: {
+				'autoplay': 1,
+				'loop': 1,
+				'playlist': 'slxPFAJN9UM' // Requis pour que le loop fonctionne
+			},
+			events: {
+				'onReady': onPlayerReady
+			}
+		});
+	}
+
+	function onPlayerReady(event) {
+		event.target.setVolume(30); // Volume à 30% pour ne pas surprendre les joueurs
+		event.target.playVideo();
+	}
+
+	// Fonction pour couper/activer le son via ton bouton
+	function toggleMute() {
+		if (player.isMuted()) {
+			player.unMute();
+			document.getElementById('music-status').innerHTML = "ON";
+			document.getElementById('speaker-icon').innerHTML = "🔊";
+		} else {
+			player.mute();
+			document.getElementById('music-status').innerHTML = "OFF";
+			document.getElementById('speaker-icon').innerHTML = "🔇";
+		}
+	}
+</script>
+
+</body>
+</html>
