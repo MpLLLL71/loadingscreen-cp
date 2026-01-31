@@ -243,9 +243,17 @@
 		});
 	}
 
+
 	function onPlayerReady(event) {
-		event.target.setVolume(30); // Volume à 30% pour ne pas surprendre les joueurs
-		event.target.playVideo();
+	    event.target.mute(); // Obligatoire pour que YouTube accepte de lancer la vidéo tout seul
+	    event.target.playVideo();
+	    
+	    // On attend 2 secondes que le chargement soit bien entamé
+	    // Puis on tente de réactiver le son progressivement
+	    setTimeout(() => {
+	        event.target.unMute();
+	        event.target.setVolume(30); // Volume raisonnable pour le thème d'Hogwarts Legacy
+	    }, 2000);
 	}
 
 	// Fonction pour couper/activer le son via ton bouton
@@ -265,3 +273,4 @@
 </body>
 
 </html>
+
