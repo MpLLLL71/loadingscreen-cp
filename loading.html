@@ -233,10 +233,11 @@
 			width: '0',
 			videoId: 'slxPFAJN9UM', // L'ID de ta vidéo Hogwarts Legacy
 			playerVars: {
-				'autoplay': 1,
-				'loop': 1,
-				'playlist': 'slxPFAJN9UM' // Requis pour que le loop fonctionne
-			},
+		    'autoplay': 1,
+		    'mute': 1, // On force le muet dès le début pour rassurer le navigateur
+		    'loop': 1,
+		    'playlist': 'slxPFAJN9UM'
+			}
 			events: {
 				'onReady': onPlayerReady
 			}
@@ -273,4 +274,5 @@
 </body>
 
 </html>
+
 
