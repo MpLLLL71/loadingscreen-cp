@@ -183,25 +183,34 @@
         "Besoin d'aide ? Les préfets sont là pour vous guider."
     ];
 
+    // On pré-configure le volume
     music.volume = 0.3;
 
     function GameDetails(servername, serverurl, mapname, maxplayers, steamid, gamemode) {
         document.getElementById("mapname").innerHTML = mapname;
         document.getElementById("steamid").innerHTML = steamid;
+        // Premier essai de lecture dès que les détails du jeu arrivent
+        attemptPlay();
     }
 
     function SetStatusChanged(status) {
         document.getElementById("status").innerHTML = status;
-        // Tentative de débloquer l'audio à chaque étape du chargement
+        // On ré-essaye à chaque changement de statut (ça finit par passer)
+        attemptPlay();
+    }
+
+    function attemptPlay() {
         if (music.paused) {
-            music.play().catch(() => {});
+            music.play().catch(err => {
+                console.log("Autoplay bloqué, nouvelle tentative au prochain changement de statut...");
+            });
         }
     }
 
-    function SetFilesNeeded(needed) {
-        this.totalFiles = needed;
-    }
+    // Force la lecture si le joueur clique sur l'écran (même si GMod limite l'interaction)
+    document.addEventListener('mouseover', () => { attemptPlay(); }, { once: true });
 
+    function SetFilesNeeded(needed) { this.totalFiles = needed; }
     function SetFilesRemaining(remaining) {
         let progress = ((this.totalFiles - remaining) / this.totalFiles) * 100;
         document.getElementById("progress-inner").style.width = progress + "%";
@@ -220,7 +229,7 @@
     }
 
     function toggleMute() {
-        if (music.muted) {
+        if (music.muted || music.paused) {
             music.muted = false;
             document.getElementById('music-status').innerHTML = "ON";
             document.getElementById('speaker-icon').innerHTML = "🔊";
@@ -234,10 +243,16 @@
 
     window.onload = function() {
         cycleTips();
+        // Lancement immédiat en muet pour "amorcer" le lecteur
+        music.muted = true;
+        music.play().then(() => {
+            setTimeout(() => { music.muted = false; }, 1000);
+        }).catch(() => {});
     };
 </script>
 
 </body>
 </html>
+
 
 
