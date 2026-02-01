@@ -172,6 +172,7 @@
 </div>
 
 <script type="text/javascript">
+    // Variables pour l'audio et les astuces
     const music = document.getElementById("loading-music");
     const tipElement = document.getElementById('tip-text');
     const tips = [
@@ -185,41 +186,51 @@
 
     music.volume = 0.3;
 
-    // FONCTION CLÉ : Elle insiste pour jouer le son
+    // --- CONNEXION AUX DONNÉES GMOD ---
+    
+    // Cette fonction est appelée automatiquement par GMod au début
+    function GameDetails( servername, serverurl, mapname, maxplayers, steamid, gamemode ) {
+        document.getElementById("mapname").innerHTML = mapname; // Affiche la map (ex: rp_hogwarts)
+        document.getElementById("steamid").innerHTML = steamid; // Affiche le SteamID du joueur
+        forcePlay();
+    }
+
+    // Cette fonction détecte le nom Steam du joueur (si disponible)
+    function SetStatusChanged( status ) {
+        document.getElementById("status").innerHTML = status;
+        
+        // Petite astuce : GMod affiche parfois le nom du joueur dans le status au début
+        if (status.indexOf("Getting host info") !== -1) {
+            // Optionnel : on peut essayer de deviner le nom ici
+        }
+        forcePlay();
+    }
+
+    // --- BARRE DE PROGRESSION ---
+    var totalFiles = 0;
+    function SetFilesNeeded( needed ) {
+        totalFiles = needed;
+    }
+
+    function SetFilesRemaining( remaining ) {
+        // Calcul du pourcentage réel
+        let progress = ((totalFiles - remaining) / totalFiles) * 100;
+        document.getElementById("progress-inner").style.width = progress + "%";
+    }
+
+    // --- LOGIQUE AUDIO ---
     function forcePlay() {
         if (music.paused) {
-            music.muted = false; // On s'assure que le son est ON
-            music.play().then(() => {
-                console.log("Musique lancée avec succès !");
-            }).catch(err => {
-                // Si ça échoue, on réessaye en muet (souvent autorisé) 
-                // puis on retire le mute 500ms après
+            music.play().catch(() => {
                 music.muted = true;
                 music.play().then(() => {
-                    setTimeout(() => { music.muted = false; }, 500);
+                    setTimeout(() => { music.muted = false; }, 1000);
                 });
             });
         }
     }
 
-    function GameDetails(servername, serverurl, mapname, maxplayers, steamid, gamemode) {
-        document.getElementById("mapname").innerHTML = mapname;
-        document.getElementById("steamid").innerHTML = steamid;
-        forcePlay(); // Déclenchement dès que le serveur répond
-    }
-
-    function SetStatusChanged(status) {
-        document.getElementById("status").innerHTML = status;
-        forcePlay(); // On ré-essaye à chaque étape (chargement fichiers, etc.)
-    }
-
-    function SetFilesNeeded(needed) { this.totalFiles = needed; }
-    function SetFilesRemaining(remaining) {
-        let progress = ((this.totalFiles - remaining) / this.totalFiles) * 100;
-        document.getElementById("progress-inner").style.width = progress + "%";
-        forcePlay(); // On ré-essaye aussi ici
-    }
-
+    // --- CYCLES DES ASTUCES ---
     function cycleTips() {
         let currentIndex = 0;
         setInterval(() => {
@@ -234,7 +245,6 @@
 
     window.onload = function() {
         cycleTips();
-        forcePlay();
     };
 </script>
 
