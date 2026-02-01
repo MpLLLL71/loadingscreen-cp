@@ -142,7 +142,7 @@
             <source src="musique.ogg" type="audio/ogg">
         </audio>
 
-        <div class="audio-control" onclick="toggleMute()">
+        <div class="audio-control" >
             <span id="speaker-icon">🔊</span> Musique : <span id="music-status">ON</span>
         </div>
 
@@ -183,37 +183,41 @@
         "Besoin d'aide ? Les préfets sont là pour vous guider."
     ];
 
-    // On pré-configure le volume
     music.volume = 0.3;
 
-    function GameDetails(servername, serverurl, mapname, maxplayers, steamid, gamemode) {
-        document.getElementById("mapname").innerHTML = mapname;
-        document.getElementById("steamid").innerHTML = steamid;
-        // Premier essai de lecture dès que les détails du jeu arrivent
-        attemptPlay();
-    }
-
-    function SetStatusChanged(status) {
-        document.getElementById("status").innerHTML = status;
-        // On ré-essaye à chaque changement de statut (ça finit par passer)
-        attemptPlay();
-    }
-
-    function attemptPlay() {
+    // FONCTION CLÉ : Elle insiste pour jouer le son
+    function forcePlay() {
         if (music.paused) {
-            music.play().catch(err => {
-                console.log("Autoplay bloqué, nouvelle tentative au prochain changement de statut...");
+            music.muted = false; // On s'assure que le son est ON
+            music.play().then(() => {
+                console.log("Musique lancée avec succès !");
+            }).catch(err => {
+                // Si ça échoue, on réessaye en muet (souvent autorisé) 
+                // puis on retire le mute 500ms après
+                music.muted = true;
+                music.play().then(() => {
+                    setTimeout(() => { music.muted = false; }, 500);
+                });
             });
         }
     }
 
-    // Force la lecture si le joueur clique sur l'écran (même si GMod limite l'interaction)
-    document.addEventListener('mouseover', () => { attemptPlay(); }, { once: true });
+    function GameDetails(servername, serverurl, mapname, maxplayers, steamid, gamemode) {
+        document.getElementById("mapname").innerHTML = mapname;
+        document.getElementById("steamid").innerHTML = steamid;
+        forcePlay(); // Déclenchement dès que le serveur répond
+    }
+
+    function SetStatusChanged(status) {
+        document.getElementById("status").innerHTML = status;
+        forcePlay(); // On ré-essaye à chaque étape (chargement fichiers, etc.)
+    }
 
     function SetFilesNeeded(needed) { this.totalFiles = needed; }
     function SetFilesRemaining(remaining) {
         let progress = ((this.totalFiles - remaining) / this.totalFiles) * 100;
         document.getElementById("progress-inner").style.width = progress + "%";
+        forcePlay(); // On ré-essaye aussi ici
     }
 
     function cycleTips() {
@@ -228,31 +232,13 @@
         }, 5000);
     }
 
-    function toggleMute() {
-        if (music.muted || music.paused) {
-            music.muted = false;
-            document.getElementById('music-status').innerHTML = "ON";
-            document.getElementById('speaker-icon').innerHTML = "🔊";
-            music.play();
-        } else {
-            music.muted = true;
-            document.getElementById('music-status').innerHTML = "OFF";
-            document.getElementById('speaker-icon').innerHTML = "🔇";
-        }
-    }
-
     window.onload = function() {
         cycleTips();
-        // Lancement immédiat en muet pour "amorcer" le lecteur
-        music.muted = true;
-        music.play().then(() => {
-            setTimeout(() => { music.muted = false; }, 1000);
-        }).catch(() => {});
+        forcePlay();
     };
 </script>
 
 </body>
 </html>
-
 
 
