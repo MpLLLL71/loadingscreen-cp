@@ -140,10 +140,10 @@
 
     <div class="center-content">
         <img src="images/logo.png" class="logo" alt="Logo HogwartsRP">
-		<!-- <audio id="loading-music" loop> -->
-			<!-- <source src="lien_de_ta_musique.mp3" type="audio/mpeg"> -->
-		<!-- </audio> -->
-		<div id="youtube-player" style="display:none;"></div>
+
+		<audio id="loading-music" autoplay loop>
+    		<source src="musique.mp3" type="audio/mpeg">
+		</audio>
 
 		<div class="audio-control" onclick="toggleMute()">
 			<span id="speaker-icon">🔊</span> Musique : <span id="music-status">ON</span>
@@ -226,22 +226,20 @@
 	var firstScriptTag = document.getElementsByTagName('script')[0];
 	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-	var player;
-	function onYouTubeIframeAPIReady() {
-		player = new YT.Player('youtube-player', {
-			height: '0',
-			width: '0',
-			videoId: 'slxPFAJN9UM', // L'ID de ta vidéo Hogwarts Legacy
-			playerVars: {
-		    'autoplay': 1,
-		    'mute': 1, // On force le muet dès le début pour rassurer le navigateur
-		    'loop': 1,
-		    'playlist': 'slxPFAJN9UM'
-			}
-			events: {
-				'onReady': onPlayerReady
-			}
-		});
+	var music = document.getElementById("loading-music");
+	music.volume = 0.3; // On règle le volume à 30% pour le confort des joueurs
+	
+	// GMod envoie parfois des signaux réseau qui débloquent l'audio
+	function SetStatusChanged(status) {
+	    document.getElementById("status").innerHTML = status;
+	    
+	    // On essaye de relancer la lecture à chaque changement de statut
+	    // au cas où le navigateur bloquerait le démarrage initial
+	    if (music.paused) {
+	        music.play().catch(function(error) {
+	            console.log("Lecture auto bloquée, en attente du signal de GMod...");
+	        });
+	    }
 	}
 
 
@@ -274,5 +272,6 @@
 </body>
 
 </html>
+
 
 
