@@ -121,10 +121,10 @@
 <div class="overlay">
     <div class="column">
         <div class="box">
-            <h3>👤 Sorcier</h3>
-            <p id="username">Chargement...</p>
-            <p id="steamid" style="font-size: 0.8em; opacity: 0.6;">STEAM_0:0:000000</p>
-        </div>
+			<h3>👤 Informations</h3>
+			<p style="font-size: 0.9em; margin-bottom: 5px;">Identifiant unique :</p>
+			<p id="steamid" style="font-weight: bold; color: #0096ff;">STEAM_0:0:000000</p>
+		</div>
         <div class="box">
             <h3>📜 Décret d'Éducation</h3>
             <ul>
@@ -190,10 +190,15 @@
     
     // Cette fonction est appelée automatiquement par GMod au début
     function GameDetails( servername, serverurl, mapname, maxplayers, steamid, gamemode ) {
-        document.getElementById("mapname").innerHTML = mapname; // Affiche la map (ex: rp_hogwarts)
-        document.getElementById("steamid").innerHTML = steamid; // Affiche le SteamID du joueur
-        forcePlay();
-    }
+		document.getElementById("mapname").innerHTML = mapname;
+		document.getElementById("steamid").innerHTML = steamid;
+    
+    // Par défaut, si on n'a pas d'API, on affiche le SteamID ou un texte générique
+    // car GMod ne donne pas le 'username' dans cette fonction.
+    document.getElementById("username").innerHTML = "Élève : " + steamid;
+    
+    forcePlay();
+}
 
     // Cette fonction détecte le nom Steam du joueur (si disponible)
     function SetStatusChanged( status ) {
